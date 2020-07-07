@@ -3,6 +3,8 @@
 
 # Translated and Modified from:
 # https://github.com/zhangxuhong1024/wifi2can/blob/master/program/mcp2515.py
+# using config values from:
+# https://github.com/Seeed-Studio/CAN_BUS_Shield/blob/master/mcp_can_dfs.h
 
 import time
 
@@ -40,7 +42,7 @@ class CAN (object):
         # Function: stop MCP2515
         self._spi_WriteBit(b'\x0f', b'\xe0', b'\x20')  # sleep mode
 
-    def Start(self, SpeedCfg, Filter=None, ListenOnly=False):
+    def Start(self, Frequency, SpeedCfg, Filter=None, ListenOnly=False):
         # Function: start MCP2515
         # SpeedCfg: CAN communication speed
         # The supported communication rates are currently as follows:
@@ -71,9 +73,35 @@ class CAN (object):
             20: b'\x87\xFF\x0F',
             10: b'\x87\xFF\x1F',
             5: b'\x87\xFF\x3F'}
-        cfg = SpeedCfg_at_16M.get(SpeedCfg, (b'\x00\x00\x00'))
-        self._spi_WriteReg(b'\x28', cfg)
+            
+        SpeedCfg_at_8M = {
+            1000: b'\x00\x80\x00',
+            500: b'\x02\x90\x00',
+            250: b'\x05\xb1\x00',
+            200: b'\x06\xb4\x00',
+            125: b'\x05\xb1\x01',
+            100: b'\x06\xb4\x01',
+            80: b'\x07\xbf\x01',
+            50: b'\x06\xb4\x03',
+            40: b'\x07\xbf\x03',
+            31: b'\x04\xa4\x07',
+            20: b'\x07\xbf\x07',
+            10: b'\x07\xbf\x0f',
+            5: b'\x07\xbf\x1f'}
+
+        if Frequency == 16:
+            print('freq 16')
+            cfg = SpeedCfg_at_16M.get(SpeedCfg, (b'\x00\x00\x00'))
+            self._spi_WriteReg(b'\x28', cfg)
+        else:
+            print('freq 8')
+            cfg = SpeedCfg_at_8M.get(SpeedCfg, (b'\x00\x00\x00'))
+            print(cfg)
+            self._spi_WriteReg(b'\x28', cfg)   
+
         del SpeedCfg_at_16M
+        del SpeedCfg_at_8M
+
         # Channel 1 packet filtering settings
         if (Filter == None):
             self._spi_WriteBit(b'\x60', b'\x64', b'\x64')
@@ -82,6 +110,7 @@ class CAN (object):
             self._spi_WriteReg(b'\x00', Filter.get('F0'))
             self._spi_WriteReg(b'\x04', Filter.get('F1'))
             self._spi_WriteReg(b'\x20', Filter.get('M0'))
+
         # Disable channel 2 message reception
         self._spi_WriteBit(b'\x70', b'\x60', b'\x00')
         self._spi_WriteReg(b'\x08', b'\xff\xff\xff\xff')
@@ -89,6 +118,7 @@ class CAN (object):
         self._spi_WriteReg(b'\x14', b'\xff\xff\xff\xff')
         self._spi_WriteReg(b'\x18', b'\xff\xff\xff\xff')
         self._spi_WriteReg(b'\x24', b'\xff\xff\xff\xff')
+
         # Set to normal mode or monitor mode
         mode = b'\x00' if (ListenOnly == False) else b'\x60'
         self._spi_WriteBit(b'\x0f', b'\xe0', mode)
