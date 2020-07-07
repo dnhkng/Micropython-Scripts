@@ -90,13 +90,10 @@ class CAN (object):
             5: b'\x07\xbf\x1f'}
 
         if Frequency == 16:
-            print('freq 16')
             cfg = SpeedCfg_at_16M.get(SpeedCfg, (b'\x00\x00\x00'))
             self._spi_WriteReg(b'\x28', cfg)
         else:
-            print('freq 8')
             cfg = SpeedCfg_at_8M.get(SpeedCfg, (b'\x00\x00\x00'))
-            print(cfg)
             self._spi_WriteReg(b'\x28', cfg)   
 
         del SpeedCfg_at_16M

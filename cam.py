@@ -9,6 +9,15 @@ can = mcp2515.CAN(SPI(1), cs=Pin('X5'))
 can.Start(8,100)
 
 
+def clearBuffer():
+    while True:
+        msg = can.Recv_msg()
+        time.sleep(0.001)
+        if msg is None:
+            break
+
+    return
+
 def getSeed():
     requestMSG = {'ext':False,  \
                   'id':0x657, \
@@ -16,8 +25,7 @@ def getSeed():
                   'dlc':8,\
                   'rtr':False}
     seed = []
-    can.Send_ms
-    g(requestMSG)
+    can.Send_msg(requestMSG)
     counter = 0
     while True:
         msg = can.Recv_msg()
